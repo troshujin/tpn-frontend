@@ -10,10 +10,17 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01" />
           </svg>
         </div>
-        <h1 class="text-6xl font-bold text-gray-800 mb-2">401</h1>
-        <p class="text-xl text-gray-600 mb-3">Unauthenticated Access</p>
-        <p class="text-gray-500 max-w-md mx-auto mb-8">You are not logged in. Thus you cannot access this resource.</p>
+        <h1 class="text-6xl font-bold text-gray-800 mb-2">403</h1>
+        <p class="text-xl text-gray-600 mb-3">Unauthorized Access</p>
+        <p class="text-gray-500 max-w-lg mx-auto mb-8">
+          You are not allowed to access this resource.<br>
+          Sometimes something goes wrong and you have to log in again.<br>
+          If there is another issue at hand, please contact your administrator.</p>
         <div class="flex space-x-4">
+          <button @click="handleBack"
+            class="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+            Go back
+          </button>
           <button @click="handleLogin"
             class="px-6 py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
             Login
@@ -31,8 +38,10 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth';
 import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 const authStore = useAuthStore();
+const router = useRouter();
 
 onMounted(() => {
   authStore.setModelOpen(true);
@@ -43,5 +52,9 @@ onMounted(() => {
 function handleLogin() {
   authStore.setModelOpen(true);
   authStore.setModelMode('login');
+}
+
+function handleBack() {
+  router.go(-1);
 }
 </script>
