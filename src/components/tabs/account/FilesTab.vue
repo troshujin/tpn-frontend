@@ -1,5 +1,6 @@
 <template>
   <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+    <LoadingErrorComponent :loading="loading" :error="error" button-value="Go back" @button-action="router.go(-1)" />
     <div class="flex flex-col gap-6">
       <!-- Toolbar -->
       <div class="flex flex-col justify-between items-start gap-4 w-full">
@@ -9,7 +10,7 @@
               class="w-64 py-2 text-sm bg-gray-200 hover:bg-gray-300 rounded-md text-gray-800">
               {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
             </button>
-            <h2 class="text-xl font-medium text-gray-800">Network Files</h2>
+            <h2 class="text-xl font-medium text-gray-800">User Files</h2>
           </div>
 
           <div class="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
@@ -207,11 +208,31 @@
 </template>
 
 <script setup lang="ts">
+import LoadingErrorComponent from '@/components/LoadingErrorComponent.vue';
 import { readableSize } from '@/lib/utils';
-import type { Network, NetworkFile } from '@/types';
-import { computed, ref } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+import type { NetworkFile } from '@/types';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-const props = defineProps<{ network: Network }>();
+const router = useRouter();
+
+const authStore = useAuthStore();
+const loading = ref(false);
+const error = ref<string | null>(null);
+const files = ref<NetworkFile[]>([]);
+
+onMounted(async () => {
+  loading.value = true;
+  try {
+  files.value = await authStore.getAllUserFiles();
+  } catch (err) {
+    console.error(err)
+    error.value = err as (string | null)
+  } finally {
+    loading.value = false;
+  }
+})
 
 const showFilters = ref(false);
 const filterSlug = ref("");
@@ -252,14 +273,14 @@ function togglePlay(file: NetworkFile) {
 // Extract formats
 const formats = computed(() => {
   const types = new Set<string>();
-  props.network.files.forEach(f => { if (f.format) types.add(f.format.toLowerCase()); });
+  files.value.forEach(f => { if (f.format) types.add(f.format.toLowerCase()); });
   return Array.from(types).sort();
 });
 
 // Filtered files
 const filteredFiles = computed(() => {
   const query = filterSlug.value.trim().toLowerCase();
-  return props.network.files.filter(file => {
+  return files.value.filter(file => {
     const name = file.name.toLowerCase();
     const author = `${file.author?.userProxy?.username ?? ''} ${file.author?.userProxy?.firstName ?? ''} ${file.author?.userProxy?.lastName ?? ''}`.toLowerCase();
     const format = file.format?.toLowerCase();
